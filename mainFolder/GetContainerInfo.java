@@ -1,3 +1,4 @@
+package mainFolder;
 /*******************************************************************************
  * Copyright (c) 2008, 2010 Xuggle Inc.  All rights reserved.
  *  

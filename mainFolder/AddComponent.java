@@ -1,7 +1,9 @@
+package mainFolder;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.ButtonGroup;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JButton;
@@ -12,6 +14,12 @@ import java.io.File;
 
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+
+import objects.Episode;
+import objects.MediaObject;
+import objects.Season;
+import objects.Show;
+import exceptions.ContractBrokenException;
 
 
 public class AddComponent extends JFrame {
@@ -25,7 +33,7 @@ public class AddComponent extends JFrame {
 	private JRadioButton rdbtnAddTitle;
 	private JRadioButton rdbtnAddFile;
 	private JRadioButton rdbtnAddAutomatically;
-	
+
 	private Shidori shidori;
 
 	private String source;	// the file path (as string) of the file to add
@@ -40,13 +48,13 @@ public class AddComponent extends JFrame {
 			this.setResizable(false);
 			this.setVisible(true);
 		}
-		
+
 		// update instance variables
 		{
 			this.sentEnum = sentEnum;
 			this.shidori = shidori;
 		}
-		
+
 		// Content pane characteristics
 		{
 			setBounds(100, 100, 447, 334);
@@ -74,13 +82,13 @@ public class AddComponent extends JFrame {
 		{
 			panelAddTitle.setBounds(0, 0, 411, 195);
 			panelAddFile.setBounds(0, 0, 411, 195);
-			
+
 			layeredPane.add(panelAddTitle);
 			layeredPane.add(panelAddFile);
-			
+
 			panelAddTitle.setLayout(null);
 			panelAddFile.setLayout(null);
-			
+
 			layeredPane.setLayer(panelAddTitle, JLayeredPane.DEFAULT_LAYER);
 			layeredPane.setLayer(panelAddFile, JLayeredPane.PALETTE_LAYER);
 		}
@@ -131,7 +139,7 @@ public class AddComponent extends JFrame {
 		}
 
 		//            -----Radio Buttons------
-		
+
 		rdbtnAddFile = new JRadioButton("Add File");
 		rdbtnAddTitle = new JRadioButton("Add Title");
 		rdbtnAddAutomatically = new JRadioButton("Add Automatically");
@@ -139,18 +147,18 @@ public class AddComponent extends JFrame {
 			rdbtnAddFile.setBounds(10, 213, 109, 23);
 			rdbtnAddTitle.setBounds(10, 239, 109, 23);
 			rdbtnAddAutomatically.setBounds(10, 265, 163, 23);
-	
+
 			contentPane.add(rdbtnAddFile);
 			contentPane.add(rdbtnAddTitle);
 			contentPane.add(rdbtnAddAutomatically);
-	
+
 			// default selection
 			rdbtnAddFile.setSelected(true);
-			
+
 			// The user is not allowed to add an automatic show
 			if(sentEnum == TypeHolderEnum.Show)
 				rdbtnAddAutomatically.setVisible(false);
-	
+
 			rdbtnAddFile.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) 
 				{
@@ -161,7 +169,7 @@ public class AddComponent extends JFrame {
 							JLayeredPane.DEFAULT_LAYER);
 				}
 			});
-	
+
 			rdbtnAddTitle.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) 
 				{
@@ -172,7 +180,7 @@ public class AddComponent extends JFrame {
 							JLayeredPane.PALETTE_LAYER);
 				}
 			});
-	
+
 			rdbtnAddAutomatically.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) 
 				{
@@ -183,7 +191,7 @@ public class AddComponent extends JFrame {
 
 
 
-		
+
 		//Container for the radio buttons
 		ButtonGroup bG = new ButtonGroup();
 		{
@@ -199,18 +207,18 @@ public class AddComponent extends JFrame {
 		{
 			btnAdd.setBounds(233, 244, 89, 23);
 			btnCancel.setBounds(332, 244, 89, 23);
-	
+
 			contentPane.add(btnAdd);
 			contentPane.add(btnCancel);
-	
+
 			btnAdd.addActionListener(new ActionListener() 
 			{
 				public void actionPerformed(ActionEvent arg0) 
 				{
-					MainObject mO = add(sentShow, sentSeason);
+					MediaObject mO = add(sentShow, sentSeason);
 				}
 			});
-	
+
 			btnCancel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) 
 				{
@@ -226,49 +234,53 @@ public class AddComponent extends JFrame {
 	 * this method takes a Show and a Season, creates a new MainObject and adds
 	 * it to these Show and Season
 	 * 
-	 * 
 	 * @param show : current show : can be null to indicate adding a show
 	 * @param season : current season : 
 	 * @throws UnsupportedInput 
 	 */
-	private MainObject add(Show show, Season season) throws UnsupportedInput
+	private MediaObject add(Show show, Season season)
 	{
-		MainObject mO = createMOUsingTypeHolder();
-		
-		// if there is no parent Show and the newly created MainObject is a 
-		// show, cast this MainObject into a Show and add it to the list in 
-		// shidori
-		if (show == null)
+		MediaObject mO = createMOUsingTypeHolder(show, season);
+
+		// if the user-input (not params) is a Show, add it directly
+		if (mO instanceof Show)
 		{
-			if (mO instanceof Show)
-			{
-				Show showToAdd = (Show)mO;
-				shidori.addShow(showToAdd);
-			}
-			else throw new UnsupportedInput();
+			Show showToAdd = (Show)mO;
+			shidori.addShow(showToAdd);
 		}
-		
-		else if (show != null && season == null)
+
+		// if the user-input is not a Show, add it directly
+		else 
 		{
-			if (mO instanceof Season)
-			{
-				Season seasonToAdd = (Season)mO;
+			// if there is no parent Show throw new ContractBrokenException
+			if (show == null)
+				JOptionPane.showMessageDialog(this, 
+						"A show should be selected to be able to add a \n"
+						+ "season/episode");
+			/* if the show is specified and the season is not, then we are 
+			 adding the newly created MainObject will be added to the show*/
+			else if (show != null && season == null)
 				try {
-					show.addSeason(seasonToAdd);
-				} catch (FileAlreadyExists e) {
-					//do Nothing
+					show.add(mO);
+				} catch (ContractBrokenException e) 
+				{
+					JOptionPane.showMessageDialog(this, 
+							"logic error at AddComponent.add()");
 				}
-			}
-			if (mO instanceof Episode)
-			{
-				Episode episodeToAdd = (Episode)mO;
+			/* if both the show and the season are specified, then the newly 
+			 * created MainObject should be an episode and will be added to 
+			 * "season" */
+			else if (show != null && season != null)
 				try {
-					show.addEpisode(episodeToAdd);
-				} catch (FileAlreadyExists e) {
-					// do nothing
+					season.add(mO);
+				} catch (ContractBrokenException e) {
+					// TODO Auto-generated catch block
+					JOptionPane.showMessageDialog(this, 
+							"you can't add a season to another season");
 				}
-			}
+			
 		}
+		return mO;
 	}
 
 
@@ -276,12 +288,14 @@ public class AddComponent extends JFrame {
 	/**
 	 * this method creates a mew main object depending on the selected radio
 	 * button and the TypeHolderEnum that was passed to this class from shidori
+	 * @param season 
+	 * @param show 
 	 * 
 	 * @return the newly generated MainObject
 	 */
-	private MainObject createMOUsingTypeHolder() 
+	private MediaObject createMOUsingTypeHolder(Show show, Season season) 
 	{
-		MainObject mO = null;
+		MediaObject mO = null;
 		if ( rdbtnAddFile.isSelected() )
 		{
 			File file = new File(source);

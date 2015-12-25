@@ -1,3 +1,4 @@
+package objects;
 import java.io.File;
 
 /**
@@ -7,10 +8,8 @@ import java.io.File;
  *
  * 
  */
-public class Episode extends MainObject
+public class Episode extends MediaObject
 {
-
-
 	//Constructor for an episode with only the title
 	public Episode(String title)	{
 		super(title);
@@ -23,7 +22,4 @@ public class Episode extends MainObject
 	public Episode(int a)	{
 		super( Integer.toString(a) );
 	}
-
-	
-	
 }

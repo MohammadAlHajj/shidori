@@ -1,6 +1,9 @@
+package test;
 import static org.junit.Assert.*;
 
 import java.io.File;
+
+import mainFolder.ShidoriHelper;
 
 import org.junit.Test;
 

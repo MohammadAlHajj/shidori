@@ -1,20 +1,19 @@
+package objects;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedList;
+
+import objects.Episode;
+import mainFolder.Addable;
 
 
-public class EpisodeSequence extends MainObject
+public abstract class EpisodeSequence extends MediaObject implements Addable
 {
 	private int size;
-	
 	
 	
 	protected EpisodeSequence(File file)
 	{
 		super(file);
 	}
-
-
 	protected EpisodeSequence(String title)
 	{
 		super(title);
@@ -25,9 +24,18 @@ public class EpisodeSequence extends MainObject
 		super(title);
 		this.size = size;
 	}
+	
+	
 
 	public int getSize() 
 	{
 		return size;
+	}
+	
+	
+	
+	public Episode createEpisode()
+	{
+		return new Episode(size);
 	}
 }
